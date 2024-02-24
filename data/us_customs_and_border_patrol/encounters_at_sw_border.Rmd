@@ -1,0 +1,235 @@
+---
+title: "Nationwide Encounters Data"
+author: "Mark Deming"
+date: "1/19/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(readr)
+library(tidyverse)
+library(plotly)
+library(extrafont)
+
+dat <- read_csv("~/Library/CloudStorage/Box-Box/research/migration/data/encounters_mexico_and_other_2000-21/dat_2000-2021.csv")
+
+dat2 <- read_csv("~/Library/CloudStorage/Box-Box/research/migration/data/encounters_2021-24/origins_dat.csv")
+```
+
+
+The US faces a migration crisis. In December 2023, a quarter million migrants were taken into custody by US Border Patrol. This is the highest number of apprehensions on record. 
+
+Something about NY.
+
+Biden has come under extraordinary pressure to curbing unauthorized immigration along the southwestern border. In January, House Republicans opened impeachment hearings against Homeland Security Secretary Alejandro Mayorkas, accusing him of intention non-enforcement of immigration laws. Further, Republicans have promised to hold up further military assistance to Ukraine until a deal is struck that would crack down on unauthorized immgiration. 
+
+Mentions of Mexican cartels and Central American caravans dominate public discourse on migration in the US. But migrants apprehended by US Customs and Border Patrol are much more diverse than public discourse suggests. For instance, as Figure 1 below highlights, Mexicans comprise less than one-half of all apprehensions.
+
+```{r}
+# Get summary annual data for years 2021-24
+summarized_dat2 <- dat2 %>%
+  mutate(year = as.numeric(substr(`Fiscal Year`, 1, 4))) %>%
+  uncount(`Encounter Count`) %>%
+  mutate(mexico = ifelse(Citizenship == "MEXICO", 1, 0)) %>%
+  group_by(year, `Land Border Region`, mexico) %>%
+  summarize(n = n())
+
+summarized_dat2 <- summarized_dat2 %>%
+  rename("border" = `Land Border Region`) %>%
+  mutate(border = ifelse(border == "Northern Land Border", "northern",
+                  ifelse(border == "Southwest Land Border", "southwest",
+                         "coastal")))
+```
+
+```{r}
+# Convert data for years 2000-21 to long format
+dat <- dat %>%
+  pivot_longer(cols = c(3:23),
+               names_to = "year",
+               values_to = "n")
+
+# Append data for years 2021-24 to data for years 2000-21
+dat <- dat %>%
+  filter(year != 2021)
+
+my_dat <- data.frame(rbind(dat, summarized_dat2))  
+my_dat <- my_dat %>%
+  mutate(year = as.numeric(year)) %>%
+  arrange(border, mexico, year)
+```
+
+```{r}
+# Get summary data for encounters with mexican/non-mexican migrants by year
+mexicans <- my_dat %>%
+  filter(mexico == 1) %>%
+  group_by(year) %>%
+  summarize(mexicans = sum(n))
+
+others <- my_dat %>%
+  filter(mexico == 0) %>%
+  group_by(year) %>%
+  summarize(others = sum(n))
+
+plot1_dat <- mexicans %>%
+  left_join(others, by = "year")
+
+# Add proportion column
+# plot1_dat <- plot1_dat %>%
+#  mutate(prop_mexican = round((mexicans/total)*100, 1))
+
+# Need to convert to long format for plotly
+plot1_dat <- plot1_dat %>%
+  pivot_longer(cols = c(2:3),
+               names_to = "variable",
+               values_to = "n")
+```
+
+```{r}
+plot1_dat <- plot1_dat %>%
+  mutate(variable = fct_rev(variable))
+
+# names(pdfFonts())
+
+# Create plot 1
+plot1 <- 
+ggplot(plot1_dat, aes(x = year, 
+                      y = n, 
+                      color = variable, 
+                      fill = variable)) +
+  geom_area(stat = "identity") +              # This was critical for proper rendering
+  scale_x_continuous(limits = c(2000,2023),
+                     breaks = c(2000:2023),
+                     labels = seq(2000,2023,1),
+                     expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,3400000),
+                     breaks = seq(0,3400000,200000),
+                     labels = c("0", "0.2M", "0.4M", "0.6M", "0.8M", 
+                                "1.0M", "1.2M", "1.4M", "1.6M", "1.8M",
+                                "2.0M", "2.2M", "2.4M", "2.6M", "2.8M", 
+                                "3.0M", "3.2M", "3.4M"),
+                     expand = c(0,0)) +
+  scale_color_manual(values = c("#BDBCB8","#B64433"),
+                     labels = c("All Other Countries", "Mexico"),
+                     guide = guide_legend(reverse = TRUE)) +
+  scale_fill_manual(values = c("#D4D4D6","#CC7C6E"),
+                    labels = c("All Other Countries", "Mexico"),
+                    guide = guide_legend(reverse = TRUE)) +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        panel.grid.major.y = element_line(color = "gray80", 
+                                          linetype = "dotted"),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.position = c(.22, .9),
+        legend.direction = "horizontal",
+        legend.margin = margin(r=1),
+        legend.title = element_blank(),
+        legend.background = element_blank(),
+        legend.text = element_text(size = 10),
+        plot.title = element_text(size = 12),
+        text = element_text(family = "Times New Roman")
+  ) 
+plot1 +
+  labs(title = "Border Encounters by Country of Origin - All Borders",
+       x = "",
+       y = "")
+
+# ggplotly(plot1)
+```
+
+
+```{r}
+# SW border
+mexicans <- my_dat %>%
+  filter(border == "southwest" &
+         mexico == 1) %>%
+  group_by(year) %>%
+  summarize(mexicans = sum(n))
+
+others <- my_dat %>%
+  filter(border == "southwest" &
+         mexico == 0) %>%
+  group_by(year) %>%
+  summarize(others = sum(n))
+
+plot2_dat <- mexicans %>%
+  left_join(others, by = "year") 
+
+plot2_dat <- plot2_dat %>%
+  pivot_longer(cols = c(2:3),
+               names_to = "variable",
+               values_to = "n")
+```
+
+
+The trend holds when we examine ecnounters at just the Southwest Land Border (Figure 2). In 2000, Mexican citizens comprised 9XX% of all encounters at the Southwest Border. By 2023, the percentage had dropped to XX%.
+
+
+```{r}
+plot2_dat <- plot2_dat %>%
+  mutate(variable = fct_rev(variable))
+
+# names(pdfFonts())
+
+# Create plot 1
+plot2 <- 
+ggplot(plot2_dat, aes(x = year, 
+                      y = n, 
+                      color = variable, 
+                      fill = variable)) +
+  geom_area(stat = "identity") +               # This was critical for proper rendering
+  scale_x_continuous(limits = c(2000,2023),
+                     breaks = c(2000:2023),
+                     labels = seq(2000,2023,1),
+                     expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,2600000),
+                     breaks = seq(0,2600000,200000),
+                     labels = c("0", "0.2M", "0.4M", "0.6M", "0.8M", 
+                                "1.0M", "1.2M", "1.4M", "1.6M", "1.8M",
+                                "2.0M", "2.2M", "2.4M", "2.6M"),
+                     expand = c(0,0)) +
+  scale_color_manual(values = c("#BDBCB8","#B64433"),
+                     labels = c("All Other Countries", "Mexico"),
+                     guide = guide_legend(reverse = TRUE)) +
+  scale_fill_manual(values = c("#D4D4D6","#CC7C6E"),
+                    labels = c("All Other Countries", "Mexico"),
+                    guide = guide_legend(reverse = TRUE)) +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        panel.grid.major.y = element_line(color = "gray80", 
+                                          linetype = "dotted"),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   size = 8),
+        axis.text.y = element_text(size = 8),
+        legend.position = c(.22, .9),
+        legend.direction = "horizontal",
+        legend.margin = margin(r=1),
+        legend.title = element_blank(),
+        legend.background = element_blank(),
+        legend.text = element_text(size = 10),
+        plot.title = element_text(size = 12),
+        text = element_text(family = "Times New Roman")
+  ) 
+plot2 +
+  labs(title = "Border Encounters by Country of Origin - Southwest Land Border",
+       x = "",
+       y = "")
+```
+
+# Map of migrant country of origin
+
+
+```{r}
+origins_dat <- dat2 %>%
+  filter(`Land Border Region` == "Southwest Land Border") %>%
+  uncount(`Encounter Count`) %>%
+  group_by(`Citizenship`) %>%
+  summarize(n = n())
+```
