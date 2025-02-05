@@ -13,17 +13,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Overview
 
-The goal of this assignment is to become familiar with how `ggplot` works. Toward this goal, you will recreate one of W.E.B. Du Bois' infographics from the Paris World Expo of 1900.
+The goal of this assignment is to become familiar with `ggplot`. To do so, you will recreate one of W.E.B. Du Bois' infographics from the Paris World Expo of 1900.
 
-The data for the assignment are at ajstark's github site: [HERE](https://github.com/ajstarks/dubois-data-portraits/tree/master/challenge). There are 10 different "challenges" at the site. Each challenge folder contains the relevant data to be plotted and a .jpg of the original infographic. There is also a .pdf file that shows a cleaned-up version of the original.
+The data for this assignment are at ajstark's github site: [HERE](https://github.com/ajstarks/dubois-data-portraits/tree/master/challenge). There are 10 different "challenge" folders at the site. Each folder contains the relevant data to be plotted and a .jpg of the original infographic. There is also a .pdf file that shows a cleaned-up version of the original.
 
 Choose among numbers 1, 4, or 5 at the top level of the folder. (Do not choose within the 2022 or 2023 subfolders.) These are the most straightforward; you should be able to reproduce them with what we have learned in class so far. 
 
-You should import the data and plot it using `ggplot`. You should use the same basic format that Du Bois used. You should be able to do this using the basic `ggplot` functions shown by Healy in Chapters 3 and 4. To make a truly precise replica, you may need to do some intermediate to advanced tweaking of themes, fonts, etc. You are welcome to do so, but it is not necessary.
+You should import the data into RStudio and plot it using `ggplot`. You should use the same basic format that Du Bois used. You should be able to do this using the basic `ggplot` functions that Healy introduces in Chapters 3 and 4. To make a truly precise replica, you may need to do some intermediate to advanced tweaking of themes, fonts, etc. You are welcome to do this, but it is not necessary. You can focus on replicating the basic chart, axes, and labels.
 
-In addition, you should also write around 0.5 pages of reflection: What was easy? What was challenging? What resources did you find that were useful? What were you unable to do but wish you could have done? And so forth. You can write your reflection in your RMD beneath your code for creating the chart.
+In addition, you should write approximately 0.5 pages of reflection: What was easy? What was challenging? What resources did you find that were useful? What were you unable to do but wish you could have done? And so forth. Write your reflection as regular text in your RMD beneath your code for creating the chart.
 
-Please submit the following to BB: \vspace{-1em}
+Please submit a zipped folder to BB. The folder should contain: \vspace{-1em}
 
 - Your RMD file with your complete code.
 - Your knitted HTML file with complete code, chart, and reflection.
